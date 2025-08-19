@@ -1815,3 +1815,88 @@ body.dark-mode .footer {
     transform: translateY(-2px); 
     box-shadow: var(--shadow-lg);
 }
+
+/* ==================================================
+   Emoji Picker Accordion Styles
+   These styles support the collapsible emoji picker used in the editor.
+   ================================================== */
+.emoji-picker-accordion {
+    width: 100%;
+}
+
+/* Button showing the current emoji and dropdown arrow */
+.emoji-current {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--secondary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.emoji-current:hover {
+    background: var(--accent);
+}
+
+.emoji-current .dropdown-arrow {
+    margin-left: auto;
+    transition: transform 0.2s ease;
+}
+
+/* Dropdown container for emoji picker */
+.emoji-picker-dropdown {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 8px;
+    margin-top: 4px;
+    background: var(--card);
+    max-height: 200px;
+    overflow-y: auto;
+    box-shadow: var(--shadow-sm);
+}
+
+/* Group container */
+.emoji-group {
+    margin-bottom: 8px;
+}
+
+/* Group title styling */
+.emoji-group-title {
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: var(--muted-foreground);
+    font-size: 14px;
+}
+
+/* Icon grid styling */
+.emoji-group-icons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.emoji-group-icons .icon-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 18px;
+}
+
+.emoji-group-icons .icon-btn:hover {
+    background: var(--accent);
+}
+
+.emoji-group-icons .icon-btn.active {
+    background: #f0fdf4;
+    border-color: #16a34a;
+}

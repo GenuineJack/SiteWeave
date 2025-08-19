@@ -60,8 +60,12 @@ function generateHTMLExport(project, settings) {
         headerAlignment = 'center',
         logoSize = '120',
         enableDarkModeToggle = false,
-        enablePrintStyles = true,
-        enableSEO = true,
+        /*
+         * Advanced options such as enablePrintStyles and enableSEO were removed from the
+         * settings as part of the UI simplification. Print styles and SEO tags are
+         * always included by default, so these options are no longer destructured
+         * from the settings object.
+         */
         uploadedFile = null,
         downloadButtonText = '',
         contactButtonUrl = '',
@@ -76,7 +80,8 @@ function generateHTMLExport(project, settings) {
     const darkModeCSS = enableDarkModeToggle ? generateDarkModeCSS(settings) : '';
     const darkModeToggle = enableDarkModeToggle ? generateDarkModeToggle(settings) : '';
     const darkModeJS = enableDarkModeToggle ? generateDarkModeJS(settings) : '';
-    const printCSS = enablePrintStyles ? generatePrintCSS() : '';
+    // Always include print CSS since users can no longer disable it via settings
+    const printCSS = generatePrintCSS();
     
     return `<!DOCTYPE html>
 <html lang="en">
@@ -84,7 +89,7 @@ function generateHTMLExport(project, settings) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${escapeHtml(project.title || 'Website')}</title>
-    ${enableSEO ? generateSEOTags(project, settings) : ''}
+    ${generateSEOTags(project, settings)}
     <style>
         ${generateHTMLStyles(settings)}
         ${darkModeCSS}
@@ -538,14 +543,13 @@ function generateCustomButtons(settings, layoutStyle) {
             </a>`);
     }
     
-    // Add default PDF print button if no buttons configured
-    if (buttons.length === 0) {
-        buttons.push(`
-            <button class="pdf-download" onclick="window.print()">
-                📄 Download PDF
-            </button>`);
-    }
-    
+    /*
+     * Previously, if no download or contact button was configured the export would fall
+     * back to rendering a default "Download PDF" print button. The new settings
+     * remove this fallback—if neither a file nor a contact URL is provided then
+     * no button will be shown. Returning the empty array allows the navigation and
+     * footer generators to gracefully handle the absence of custom buttons.
+     */
     return buttons;
 }
 
