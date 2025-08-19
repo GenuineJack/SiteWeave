@@ -26,14 +26,12 @@ let APP_STATE = {
         logoSize: '120',
         layoutStyle: 'single',
         darkMode: false,
-        enableDarkModeToggle: false,
-        enablePrintStyles: true,
-        enableSEO: true,
-        customButtons: [],
         uploadedFile: null,
         uploadedFileName: null,
-        analyticsCode: '',
-        userEmail: '' // deprecated
+        downloadButtonText: '',
+        contactButtonUrl: '',
+        contactButtonText: '',
+        analyticsCode: ''
     },
     currentScreen: 'upload',
     isLoading: false,
@@ -69,7 +67,6 @@ function initializeApp() {
     
     // Set up global event listeners
     setupGlobalEventListeners();
-    renderCustomButtonsUI();
     
     // Initialize current screen
     showScreen('upload');
@@ -124,12 +121,11 @@ function cacheDOMReferences() {
         // Settings tab elements
         downloadFileInput: document.getElementById('downloadFileInput'),
         uploadedFileDisplay: document.getElementById('uploadedFileDisplay'),
-        builderDarkMode: document.getElementById('builderDarkMode'),
-        websiteDarkMode: document.getElementById('websiteDarkMode'),
+        downloadButtonText: document.getElementById('downloadButtonText'),
+        contactButtonUrl: document.getElementById('contactButtonUrl'),
+        contactButtonText: document.getElementById('contactButtonText'),
         analyticsCode: document.getElementById('analyticsCode'),
-        userEmail: document.getElementById('userEmail'),
-        enablePrintStyles: document.getElementById('enablePrintStyles'),
-        enableSEO: document.getElementById('enableSEO'),
+        buttonPreview: document.getElementById('buttonPreview'),
         
         // Modals
         previewModal: document.getElementById('previewModal'),
@@ -219,14 +215,12 @@ function resetToUploadScreen() {
         logoSize: '120',
         layoutStyle: 'single',
         darkMode: false,
-        enableDarkModeToggle: false,
-        enablePrintStyles: true,
-        enableSEO: true,
-        customButtons: [],
         uploadedFile: null,
         uploadedFileName: null,
-        analyticsCode: '',
-        userEmail: '' // deprecated
+        downloadButtonText: '',
+        contactButtonUrl: '',
+        contactButtonText: '',
+        analyticsCode: ''
     };
     
     APP_STATE.unsavedChanges = false;
@@ -379,12 +373,15 @@ function loadSettingsIntoUI() {
     if (DOM_REFS.headerAlignment) DOM_REFS.headerAlignment.value = settings.headerAlignment;
     if (DOM_REFS.layoutStyle) DOM_REFS.layoutStyle.value = settings.layoutStyle;
     if (DOM_REFS.analyticsCode) DOM_REFS.analyticsCode.value = settings.analyticsCode;
-    if (DOM_REFS.userEmail) DOM_REFS.userEmail.value = settings.userEmail;
-    if (DOM_REFS.enablePrintStyles) DOM_REFS.enablePrintStyles.checked = settings.enablePrintStyles;
-    if (DOM_REFS.enableSEO) DOM_REFS.enableSEO.checked = settings.enableSEO;
+    
+    // Button settings
+    if (DOM_REFS.downloadButtonText) DOM_REFS.downloadButtonText.value = settings.downloadButtonText || '';
+    if (DOM_REFS.contactButtonUrl) DOM_REFS.contactButtonUrl.value = settings.contactButtonUrl || '';
+    if (DOM_REFS.contactButtonText) DOM_REFS.contactButtonText.value = settings.contactButtonText || '';
     
     // Update value displays
     updateSizeDisplays();
+    updateButtonPreview();
 }
 
 /**
@@ -476,6 +473,7 @@ function generatePreviewHtml() {
     
     const navHtml = generatePreviewNavigation();
     const sectionsHtml = generatePreviewSections();
+    const buttonsHtml = generatePreviewButtons();
     
     return `
         <!DOCTYPE html>
@@ -599,9 +597,10 @@ function generatePreviewHtml() {
                     display: inline-block;
                     margin: 40px auto 20px;
                     transition: all 0.3s ease;
+                    text-decoration: none;
                 }
-                .pdf-download:hover {
-                    transform: translateY(-2px);
+                .pdf-download:hover { 
+                    transform: translateY(-2px); 
                     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
                 }
                 .pdf-download-container {
@@ -694,6 +693,13 @@ function generatePreviewHtml() {
                     border: none;
                     border-top: 1px solid #e5e7eb;
                 }
+                #menuDropdown .pdf-download {
+                    background: linear-gradient(135deg, ${primaryColor}, ${secondaryColor});
+                    color: white !important;
+                    text-align: center;
+                    display: block;
+                    margin-top: 8px;
+                }
             </style>
         </head>
         <body>
@@ -701,13 +707,7 @@ function generatePreviewHtml() {
             <div class="container">
                 ${sectionsHtml}
             </div>
-            ${layoutStyle === 'single' ? `
-                <div class="pdf-download-container">
-                    <button class="pdf-download" onclick="alert('PDF download would be triggered here')">
-                        📄 Download PDF
-                    </button>
-                </div>
-            ` : ''}
+            ${layoutStyle === 'single' ? buttonsHtml : ''}
             
             ${layoutStyle === 'menu' ? `
             <script>
@@ -734,7 +734,8 @@ function generatePreviewHtml() {
  */
 function generatePreviewNavigation() {
     const { settings, currentProject } = APP_STATE;
-    const { layoutStyle, primaryColor, secondaryColor } = settings;
+    const { layoutStyle } = settings;
+    const buttons = generatePreviewButtonsArray();
     
     if (layoutStyle === 'sections') {
         return `
@@ -743,7 +744,9 @@ function generatePreviewNavigation() {
                     ${currentProject.sections.map(section => 
                         `<a href="#${section.id}">${section.icon} ${section.name}</a>`
                     ).join('')}
-                    <button class="pdf-download" style="margin-left: auto;" onclick="alert('PDF download would be triggered here')">📄 Download PDF</button>
+                    <div style="margin-left: auto;">
+                        ${buttons.join('')}
+                    </div>
                 </div>
             </nav>
         `;
@@ -760,13 +763,48 @@ function generatePreviewNavigation() {
                         `<a href="#${section.id}" onclick="toggleMenu()">${section.icon} ${section.name}</a>`
                     ).join('')}
                     <hr>
-                    <button class="pdf-download" onclick="alert('PDF download would be triggered here')">📄 Download PDF</button>
+                    ${buttons.join('')}
                 </div>
             </div>
         `;
     }
     
     return '';
+}
+
+/**
+ * Generate preview buttons array
+ */
+function generatePreviewButtonsArray() {
+    const buttons = [];
+    
+    if (APP_STATE.settings.uploadedFile) {
+        const text = APP_STATE.settings.downloadButtonText || 'Download';
+        buttons.push(`<button class="pdf-download" onclick="alert('Download: ${APP_STATE.settings.uploadedFile.name}')">📄 ${text}</button>`);
+    }
+    
+    if (APP_STATE.settings.contactButtonUrl) {
+        const text = APP_STATE.settings.contactButtonText || 'Contact Us';
+        buttons.push(`<button class="pdf-download" onclick="alert('Contact: ${APP_STATE.settings.contactButtonUrl}')">📧 ${text}</button>`);
+    }
+    
+    if (buttons.length === 0) {
+        buttons.push(`<button class="pdf-download" onclick="alert('PDF download would be triggered here')">📄 Download PDF</button>`);
+    }
+    
+    return buttons;
+}
+
+/**
+ * Generate preview buttons HTML
+ */
+function generatePreviewButtons() {
+    const buttons = generatePreviewButtonsArray();
+    return `
+        <div class="pdf-download-container">
+            ${buttons.join('')}
+        </div>
+    `;
 }
 
 /**
@@ -949,7 +987,6 @@ function switchTab(tabName) {
 /**
  * Handle download file upload
  */
-
 function handleDownloadFileUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -973,16 +1010,80 @@ function handleDownloadFileUpload(event) {
                         <h4>${file.name}</h4>
                         <p>${formatFileSize(file.size)} • ${getFileType(file.name).toUpperCase()}</p>
                     </div>
+                    <button class="btn btn-small btn-secondary" onclick="removeUploadedFile()">Remove</button>
                 </div>
             `;
         }
 
+        updateButtonPreview();
         updateProject();
         window.LWB_Utils.showToast('Download file uploaded', 'success');
     };
     reader.readAsDataURL(file);
 }
 
+/**
+ * Remove uploaded file
+ */
+function removeUploadedFile() {
+    APP_STATE.settings.uploadedFile = null;
+    APP_STATE.settings.uploadedFileName = null;
+    if (DOM_REFS.downloadFileInput) DOM_REFS.downloadFileInput.value = '';
+    
+    const display = DOM_REFS.uploadedFileDisplay;
+    if (display) {
+        display.innerHTML = `
+            <div class="no-file-message">
+                <span>📎</span>
+                <p>No file uploaded</p>
+                <small>Upload a PDF or document for visitors to download</small>
+            </div>
+        `;
+    }
+    
+    updateButtonPreview();
+    updateProject();
+}
+
+/**
+ * Update button settings
+ */
+function updateButtonSettings() {
+    APP_STATE.settings.downloadButtonText = DOM_REFS.downloadButtonText?.value || '';
+    APP_STATE.settings.contactButtonUrl = DOM_REFS.contactButtonUrl?.value || '';
+    APP_STATE.settings.contactButtonText = DOM_REFS.contactButtonText?.value || '';
+    
+    updateButtonPreview();
+    updateProject();
+}
+
+/**
+ * Update button preview
+ */
+function updateButtonPreview() {
+    const preview = DOM_REFS.buttonPreview;
+    if (!preview) return;
+    
+    let buttons = [];
+    
+    // Download button preview
+    if (APP_STATE.settings.uploadedFile) {
+        const text = APP_STATE.settings.downloadButtonText || 'Download';
+        buttons.push(`<a href="#" class="pdf-download" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border-radius: 8px; font-weight: 600; margin: 8px; text-decoration: none; transition: all 0.3s ease;">📄 ${text}</a>`);
+    }
+    
+    // Contact button preview
+    if (APP_STATE.settings.contactButtonUrl) {
+        const text = APP_STATE.settings.contactButtonText || 'Contact Us';
+        buttons.push(`<a href="#" class="pdf-download" style="display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; border-radius: 8px; font-weight: 600; margin: 8px; text-decoration: none; transition: all 0.3s ease;">📧 ${text}</a>`);
+    }
+    
+    if (buttons.length > 0) {
+        preview.innerHTML = buttons.join('');
+    } else {
+        preview.innerHTML = '<p style="color: var(--muted-foreground); font-size: 14px;">Configure buttons above to see preview</p>';
+    }
+}
 
 function getFileIcon(filename) {
     const ext = filename.split('.').pop().toLowerCase();
@@ -1021,49 +1122,13 @@ function getFileType(filename) {
 /**
  * Toggle dark mode for builder
  */
-function toggleBuilderDarkMode(enabled) {
-    APP_STATE.settings.darkMode = enabled;
-    
-    if (enabled) {
-        document.body.classList.add('dark-mode');
-        window.LWB_Utils.showToast('Dark mode enabled', 'success');
-    } else {
-        document.body.classList.remove('dark-mode');
-        window.LWB_Utils.showToast('Dark mode disabled', 'success');
-    }
-    
-    updateProject();
-}
-
-/**
- * Toggle dark mode option for created websites
- */
-function toggleWebsiteDarkMode(enabled) {
-    APP_STATE.settings.enableDarkModeToggle = enabled;
-    
-    if (enabled) {
-        window.LWB_Utils.showToast('Dark mode toggle will be added to exported websites', 'success');
-    } else {
-        window.LWB_Utils.showToast('Dark mode toggle removed from exported websites', 'success');
-    }
-    
-    updateProject();
-}
-
-/**
- * Toggle print styles
- */
-function togglePrintStyles(enabled) {
-    APP_STATE.settings.enablePrintStyles = enabled;
-    updateProject();
-}
-
-/**
- * Toggle SEO features
- */
-function toggleSEO(enabled) {
-    APP_STATE.settings.enableSEO = enabled;
-    updateProject();
+function toggleBuilderDarkMode() {
+    const root = document.body;
+    root.classList.toggle('builder-dark');
+    const isDark = root.classList.contains('builder-dark');
+    APP_STATE.settings.darkMode = isDark;
+    const btn = document.getElementById('builderThemeToggle');
+    if (btn) btn.textContent = isDark ? '☀️ Light' : '🌙 Dark';
 }
 
 // ===================================================
@@ -1171,7 +1236,6 @@ function downloadWebsite() {
     
     // Add analytics code from settings
     APP_STATE.settings.analyticsCode = DOM_REFS.analyticsCode?.value || '';
-    APP_STATE.settings.userEmail = DOM_REFS.userEmail?.value || '';
     
     const result = window.LWB_Export.exportWebsite(APP_STATE.currentProject, APP_STATE.settings, format);
     
@@ -1233,13 +1297,6 @@ function setupGlobalEventListeners() {
         DOM_REFS.blankBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             createBlankWebsite();
-        });
-    }
-
-    // Header builder dark mode toggle
-    if (DOM_REFS.builderThemeToggle) {
-        DOM_REFS.builderThemeToggle.addEventListener('click', () => {
-            toggleBuilderDarkMode();
         });
     }
 
@@ -1356,19 +1413,7 @@ function createBlankWebsite() {
 }
 
 // ===================================================
-// BUILDER DARK MODE (Builder UI only)
-// ===================================================
-function toggleBuilderDarkMode() {
-    const root = document.body;
-    root.classList.toggle('builder-dark');
-    const isDark = root.classList.contains('builder-dark');
-    APP_STATE.settings.darkMode = isDark;
-    const btn = document.getElementById('builderThemeToggle');
-    if (btn) btn.textContent = isDark ? '☀️ Light' : '🌙 Dark';
-}
-
-// ===================================================
-// INFO MODAL CTA - ENHANCED
+// INFO MODAL CTA
 // ===================================================
 function getStartedFromModal() {
     closeInfoModal();
@@ -1413,78 +1458,6 @@ function getStartedFromModal() {
 }
 
 // ===================================================
-// CUSTOM BUTTONS (Settings Tab)
-// ===================================================
-function renderCustomButtonsUI() {
-    const container = document.getElementById('customButtonsContainer');
-    if (!container) return;
-    const items = (APP_STATE.settings.customButtons || []).map((btn, idx) => {
-        const text = btn.text || '';
-        const icon = btn.icon || '🔗';
-        const type = btn.type || 'website';
-        const value = btn.value || '';
-        return `
-        <div class="button-item" data-index="${idx}">
-            <input type="text" value="${icon}" maxlength="3" placeholder="🔗" oninput="updateCustomButtonField(${idx}, 'icon', this.value)">
-            <input type="text" value="${escapeHtml(text)}" placeholder="Button text" oninput="updateCustomButtonField(${idx}, 'text', this.value)">
-            <select onchange="updateCustomButtonField(${idx}, 'type', this.value)">
-                <option value="website" ${type==='website'?'selected':''}>Website</option>
-                <option value="email" ${type==='email'?'selected':''}>Email</option>
-                <option value="phone" ${type==='phone'?'selected':''}>Phone</option>
-                <option value="download" ${type==='download'?'selected':''}>Download File</option>
-                <option value="calendar" ${type==='calendar'?'selected':''}>Calendar Link</option>
-            </select>
-            <input type="text" value="${escapeHtml(value)}" placeholder="URL / email / phone" oninput="updateCustomButtonField(${idx}, 'value', this.value)">
-            <button class="btn btn-small btn-secondary" onclick="removeCustomButton(${idx})">✕</button>
-        </div>`;
-    }).join('');
-    container.innerHTML = items || '<div class="no-file-message"><p>No custom buttons yet.</p></div>';
-    refreshCustomButtonsPreview();
-}
-
-function addCustomButton() {
-    if (!APP_STATE.settings.customButtons) APP_STATE.settings.customButtons = [];
-    APP_STATE.settings.customButtons.push({ text: 'Contact Us', icon: '🔗', type: 'website', value: '' });
-    renderCustomButtonsUI();
-    updateProject();
-}
-
-function removeCustomButton(index) {
-    APP_STATE.settings.customButtons.splice(index, 1);
-    renderCustomButtonsUI();
-    updateProject();
-}
-
-function updateCustomButtonField(index, field, value) {
-    const btn = APP_STATE.settings.customButtons[index];
-    if (!btn) return;
-    btn[field] = value;
-    refreshCustomButtonsPreview();
-    updateProject();
-}
-
-function refreshCustomButtonsPreview() {
-    const preview = document.getElementById('customButtonsPreview');
-    if (!preview) return;
-    // Reuse export renderer
-    const html = (typeof generateCustomButtonsHtml === 'function')
-        ? generateCustomButtonsHtml(APP_STATE.settings)
-        : '';
-    preview.innerHTML = html;
-}
-
-/** Escape HTML for safe attribute usage */
-function escapeHtml(str) {
-    if (!str && str !== 0) return '';
-    return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-}
-
-// ===================================================
 // GLOBAL FUNCTION EXPORTS
 // ===================================================
 
@@ -1508,6 +1481,11 @@ window.exportWebsite = exportWebsite;
 window.closeExportModal = closeExportModal;
 window.downloadWebsite = downloadWebsite;
 window.updatePreview = updatePreview;
+window.handleDownloadFileUpload = handleDownloadFileUpload;
+window.removeUploadedFile = removeUploadedFile;
+window.updateButtonSettings = updateButtonSettings;
+window.updateButtonPreview = updateButtonPreview;
+window.toggleBuilderDarkMode = toggleBuilderDarkMode;
 
 // Editor functions (connected to the modular editor)
 window.addSection = () => window.LWB_Editor.addSection(APP_STATE.currentProject, updateProject);
@@ -1530,13 +1508,6 @@ window.insertCaptionLink = (sectionIndex, contentIndex) => window.LWB_Editor.ins
 
 window.handleImageUpload = (sectionIndex, contentIndex, event) => window.LWB_Editor.handleImageUpload(APP_STATE.currentProject, sectionIndex, contentIndex, event, updateProject);
 window.updateImageCaption = (sectionIndex, contentIndex, caption) => window.LWB_Editor.updateImageCaption(APP_STATE.currentProject, sectionIndex, contentIndex, caption, updateProject);
-
-// Settings tab functions
-window.handleDownloadFileUpload = handleDownloadFileUpload;
-window.toggleBuilderDarkMode = toggleBuilderDarkMode;
-window.toggleWebsiteDarkMode = toggleWebsiteDarkMode;
-window.togglePrintStyles = togglePrintStyles;
-window.toggleSEO = toggleSEO;
 
 // ===================================================
 // APPLICATION STARTUP
