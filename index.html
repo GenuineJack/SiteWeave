@@ -291,59 +291,23 @@
                     <div id="settingsTab" class="tab-content">
                         <h2 style="margin-bottom: 24px;">⚙️ Settings</h2>
                         
-                        <!-- Download Button Configuration -->
+                        <!-- Custom Buttons Manager -->
                         <div class="form-group">
                             <label class="form-label">
-                                📄 Download Button
-                                <span class="info-tooltip" title="Add a downloadable file for visitors">ℹ️</span>
+                                🔘 Custom Buttons
+                                <span class="info-tooltip" title="Add up to 3 custom buttons (file, link or email)">ℹ️</span>
                             </label>
-                            <div class="file-upload-section">
-                                <label for="downloadFileInput" class="file-upload-label" style="display: inline-block; padding: 10px 20px; background: var(--primary); color: white; border-radius: var(--radius-md); cursor: pointer; transition: all 0.2s ease; font-weight: 500;">
-                                    Choose File to Upload
-                                </label>
-                                <input type="file" id="downloadFileInput" onchange="handleDownloadFileUpload(event)" style="display: none;">
-                                <div id="uploadedFileDisplay" class="uploaded-file-display" style="margin-top: 12px;">
-                                    <div class="no-file-message">
-                                        <span>📎</span>
-                                        <p>No file uploaded</p>
-                                        <small>Upload a PDF or document for visitors to download</small>
-                                    </div>
-                                </div>
-                                <input type="text" 
-                                       id="downloadButtonText" 
-                                       class="form-input" 
-                                       placeholder="Button text (e.g., 'Download Brochure')" 
-                                       style="margin-top: 12px;"
-                                       onchange="updateButtonSettings()">
+                            <div id="buttonsContainer" class="custom-buttons-container"></div>
+                            <div id="addButtonMenu" class="add-button-menu" style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+                                <button type="button" class="btn btn-small btn-primary" onclick="addButton('file')">+ File Button</button>
+                                <button type="button" class="btn btn-small btn-primary" onclick="addButton('link')">+ Link Button</button>
+                                <button type="button" class="btn btn-small btn-primary" onclick="addButton('email')">+ Email Button</button>
                             </div>
                         </div>
-
-                        <!-- Contact Button Configuration -->
-                        <div class="form-group">
-                            <label class="form-label">
-                                📧 Contact Button
-                                <span class="info-tooltip" title="Add a contact button with URL or email">ℹ️</span>
-                            </label>
-                            <input type="text" 
-                                   id="contactButtonUrl" 
-                                   class="form-input" 
-                                   placeholder="Website URL or email address"
-                                   onchange="updateButtonSettings()">
-                            <input type="text" 
-                                   id="contactButtonText" 
-                                   class="form-input" 
-                                   placeholder="Button text (e.g., 'Contact Us')" 
-                                   style="margin-top: 8px;"
-                                   onchange="updateButtonSettings()">
-                            <span class="form-help">URLs and emails are automatically detected</span>
-                        </div>
-
                         <!-- Button Preview -->
                         <div class="form-group">
                             <label class="form-label">Button Preview</label>
-                            <div id="buttonPreview" style="padding: 16px; background: var(--muted); border-radius: var(--radius-lg); text-align: center;">
-                                <p style="color: var(--muted-foreground); font-size: 14px;">Configure buttons above to see preview</p>
-                            </div>
+                            <div id="buttonPreview" class="custom-buttons-preview" style="padding: 16px; background: var(--muted); border-radius: var(--radius-lg); text-align: center;"></div>
                         </div>
 
                         <!-- Analytics Code -->
@@ -369,7 +333,10 @@
                             </div>
                             <span class="preview-url">https://your-website.com</span>
                         </div>
-                        <iframe id="websitePreview" class="preview-iframe" srcdoc="<h1>Loading preview...</h1>"></iframe>
+                        <!-- The iframe is wrapped to offset it by the faux browser header height. -->
+                        <div class="preview-iframe-wrapper">
+                            <iframe id="websitePreview" class="preview-iframe" srcdoc="<h1>Loading preview...</h1>"></iframe>
+                        </div>
                     </div>
                 </div>
             </div>
