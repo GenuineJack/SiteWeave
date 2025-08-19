@@ -82,7 +82,7 @@
                     </div>
                 </div>
 
-                <!-- Features Preview Section (New Addition) -->
+                <!-- Features Preview Section -->
                 <section style="margin-top: 80px; text-align: center;">
                     <h2 style="font-size: 24px; font-weight: 700; color: var(--foreground); margin-bottom: 16px; letter-spacing: -0.01em;">
                         Why Choose SiteWeave?
@@ -221,7 +221,10 @@
                                 Logo
                                 <span class="info-tooltip" title="Upload a logo for your website header">ℹ️</span>
                             </label>
-                            <input type="file" id="logoInput" accept="image/*" onchange="handleLogoUpload(event)" class="form-input">
+                            <label for="logoInput" class="file-upload-label" style="display: inline-block; padding: 10px 20px; background: var(--primary); color: white; border-radius: var(--radius-md); cursor: pointer; transition: all 0.2s ease; font-weight: 500;">
+                                Choose Logo Image
+                            </label>
+                            <input type="file" id="logoInput" accept="image/*" onchange="handleLogoUpload(event)" style="display: none;">
                             <div id="logoPreview" style="margin-top: 12px;"></div>
                         </div>
 
@@ -284,29 +287,66 @@
                         </div>
                     </div>
 
-                    <!-- Settings Tab -->
+                    <!-- UPDATED Settings Tab -->
                     <div id="settingsTab" class="tab-content">
-                        <h2 style="margin-bottom: 24px;">⚙️ Advanced Settings</h2>
+                        <h2 style="margin-bottom: 24px;">⚙️ Settings</h2>
                         
-                        <!-- Download File -->
+                        <!-- Download Button Configuration -->
                         <div class="form-group">
                             <label class="form-label">
-                                📄 Downloadable File
-                                <span class="info-tooltip" title="Upload a file users can download from your website">ℹ️</span>
+                                📄 Download Button
+                                <span class="info-tooltip" title="Add a downloadable file for visitors">ℹ️</span>
                             </label>
                             <div class="file-upload-section">
-                                <input type="file" id="downloadFileInput" onchange="handleDownloadFileUpload(event)" class="form-input">
-                                <div id="uploadedFileDisplay" class="uploaded-file-display">
+                                <label for="downloadFileInput" class="file-upload-label" style="display: inline-block; padding: 10px 20px; background: var(--primary); color: white; border-radius: var(--radius-md); cursor: pointer; transition: all 0.2s ease; font-weight: 500;">
+                                    Choose File to Upload
+                                </label>
+                                <input type="file" id="downloadFileInput" onchange="handleDownloadFileUpload(event)" style="display: none;">
+                                <div id="uploadedFileDisplay" class="uploaded-file-display" style="margin-top: 12px;">
                                     <div class="no-file-message">
                                         <span>📎</span>
                                         <p>No file uploaded</p>
                                         <small>Upload a PDF or document for visitors to download</small>
                                     </div>
                                 </div>
+                                <input type="text" 
+                                       id="downloadButtonText" 
+                                       class="form-input" 
+                                       placeholder="Button text (e.g., 'Download Brochure')" 
+                                       style="margin-top: 12px;"
+                                       onchange="updateButtonSettings()">
                             </div>
                         </div>
 
-                        <!--  Analytics -->
+                        <!-- Contact Button Configuration -->
+                        <div class="form-group">
+                            <label class="form-label">
+                                📧 Contact Button
+                                <span class="info-tooltip" title="Add a contact button with URL or email">ℹ️</span>
+                            </label>
+                            <input type="text" 
+                                   id="contactButtonUrl" 
+                                   class="form-input" 
+                                   placeholder="Website URL or email address"
+                                   onchange="updateButtonSettings()">
+                            <input type="text" 
+                                   id="contactButtonText" 
+                                   class="form-input" 
+                                   placeholder="Button text (e.g., 'Contact Us')" 
+                                   style="margin-top: 8px;"
+                                   onchange="updateButtonSettings()">
+                            <span class="form-help">URLs and emails are automatically detected</span>
+                        </div>
+
+                        <!-- Button Preview -->
+                        <div class="form-group">
+                            <label class="form-label">Button Preview</label>
+                            <div id="buttonPreview" style="padding: 16px; background: var(--muted); border-radius: var(--radius-lg); text-align: center;">
+                                <p style="color: var(--muted-foreground); font-size: 14px;">Configure buttons above to see preview</p>
+                            </div>
+                        </div>
+
+                        <!-- Analytics Code -->
                         <div class="form-group">
                             <label class="form-label">
                                 📊 Analytics Code
@@ -314,31 +354,6 @@
                             </label>
                             <textarea id="analyticsCode" class="form-textarea" rows="4" placeholder="Paste your analytics tracking code here..."></textarea>
                             <span class="form-help">This code will be added to the &lt;head&gt; section of your exported website</span>
-                        </div>
-
-                        <!-- Email for Forms -->
-                        <div class="form-group">
-                            <label class="form-label">
-                                📧 Contact Email
-                                <span class="info-tooltip" title="Email address for form submissions">ℹ️</span>
-                            </label>
-                            <input type="email" id="userEmail" class="form-input" placeholder="your@email.com">
-                            <span class="form-help">Used for mailto: links in contact forms</span>
-                        </div>
-
-                        <!-- Custom Buttons -->
-                        <div class="form-group">
-                            <label class="form-label">🚀 Advanced Options</label>
-                            <div class="toggle-group">
-                                <div class="toggle-option">
-                                    <input type="checkbox" id="enablePrintStyles" checked onchange="togglePrintStyles(this.checked)">
-                                    <label for="enablePrintStyles" class="toggle-label">Optimize for Printing</label>
-                                </div>
-                                <div class="toggle-option">
-                                    <input type="checkbox" id="enableSEO" checked onchange="toggleSEO(this.checked)">
-                                    <label for="enableSEO" class="toggle-label">Search Engine Optimization (SEO)</label>
-                                </div>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -423,7 +438,8 @@
 
     <!-- Info Modal -->
     <div id="infoModal" class="modal">
-        <div class="modal-content"><button class="close-btn" onclick="closeInfoModal()">✕</button>
+        <div class="modal-content">
+            <button class="close-btn" onclick="closeInfoModal()">✕</button>
             <h2 class="modal-title">About SiteWeave</h2>
             <p style="line-height: 1.7; color: var(--muted-foreground); margin-top: 12px;">
                 <strong>SiteWeave</strong> turns PDFs, PowerPoints, images, and text into polished, responsive single‑page websites.
@@ -450,7 +466,7 @@
             <div style="display:flex; gap:12px; margin-top: 16px;">
                 <button class="btn btn-primary" onclick="getStartedFromModal()" style="flex:1">Get Started</button>
                 <button class="btn btn-secondary" onclick="closeInfoModal()">Close</button>
-            </div></div>
+            </div>
         </div>
     </div>
 
@@ -458,7 +474,8 @@
         <div class="footer-content">
             <div>
                 Made with 🧡 by <a href="https://www.linkedin.com/in/jackdemanche/" target="_blank" rel="noopener">Jack</a>
-            </div></div>
+            </div>
+        </div>
     </footer>
 
     <!-- Load JavaScript modules in correct order -->
