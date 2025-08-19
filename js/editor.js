@@ -160,8 +160,19 @@ function toggleEmojiPicker(sectionIndex) {
         document.querySelectorAll('.emoji-picker-dropdown').forEach(p => {
             p.style.display = 'none';
         });
+        // Reset all arrows
+        document.querySelectorAll('.dropdown-arrow').forEach(arrow => {
+            arrow.style.transform = 'rotate(0deg)';
+        });
+        
         // Toggle this picker
         picker.style.display = isOpen ? 'none' : 'block';
+        
+        // Update arrow rotation for this picker
+        const arrow = picker.parentElement.querySelector('.dropdown-arrow');
+        if (arrow) {
+            arrow.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+        }
     }
 }
 
